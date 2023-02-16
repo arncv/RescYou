@@ -55,38 +55,41 @@ async function init() {
 
 function runChat() {
     app.use(express.static("public"));
-    http.listen(0, function () {
-        const randomInstancePort = http.address().port;
+
+    const httpServer = http.listen(0, function () {
+        const randomInstancePort = httpServer.address().port;
         open("http://localhost:" + randomInstancePort);
     });
+
     subscribeToMirror();
+
     io.on("connection", function (client) {
         const connectMessage = {
             operatorAccount: operatorAccount,
             client: client.id,
             topicId: topicId.toString()
-        }
-        io.emit(
-            "connect message",
-            JSON.stringify(connectMessage)
-        );
+        };
+        io.emit("connect message", JSON.stringify(connectMessage));
+
         client.on("chat message", function (msg) {
             const message = {
                 operatorAccount: operatorAccount,
                 client: client.id,
                 message: msg
-            }
+            };
             sendHCSMessage(JSON.stringify(message));
         });
+
         client.on("disconnect", function () {
             const disconnect = {
                 operatorAccount: operatorAccount,
                 client: client.id
-            }
+            };
             io.emit("disconnect message", JSON.stringify(disconnect));
         });
     });
 }
+
 
 init(); // process arguments & handoff to runChat()
 
